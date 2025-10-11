@@ -1,3 +1,5 @@
+ARG OTEL_INSTALL_DIR=/otel-dotnet-auto
+
 # This stage is used when running from VS in fast mode (Default for Debug configuration)
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
 USER $APP_UID
@@ -6,8 +8,9 @@ EXPOSE 8080
 EXPOSE 8081
 
 # --- OpenTelemetry Environment Variables ---
+ARG OTEL_INSTALL_DIR
 # Set the home directory for the agent
-ENV OTEL_DOTNET_AUTO_HOME=/otel-dotnet-auto
+ENV OTEL_DOTNET_AUTO_HOME=${OTEL_INSTALL_DIR}
 # Enable instrumentation injection
 ENV OTEL_DOTNET_AUTO_INJECT=true
 # Set the service name for traces (important for traceability)
@@ -20,10 +23,12 @@ ENV OTEL_EXPORTER_OTLP_PROTOCOL=grpc
 # This stage is used to download the OpenTelemetry .NET Auto-Instrumentation Agent
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS otel_installer
 WORKDIR /tmp
+ARG OTEL_INSTALL_DIR
 RUN apt-get update && apt-get install -y --no-install-recommends unzip curl && rm -rf /var/lib/apt/lists/*
 ADD https://github.com/open-telemetry/opentelemetry-dotnet-instrumentation/releases/latest/download/otel-dotnet-auto-install.sh otel-dotnet-auto-install.sh
-RUN sh otel-dotnet-auto-install.sh
-RUN chmod +x /otel-dotnet-auto/instrument.sh
+RUN export OTEL_DOTNET_AUTO_HOME=${OTEL_INSTALL_DIR} \
+    && sh otel-dotnet-auto-install.sh \
+    && chmod +x ${OTEL_INSTALL_DIR}/instrument.sh
 
 # This stage is used to build the service project
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
@@ -42,6 +47,7 @@ RUN dotnet publish "./WebApi.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:
 
 # This stage is used in production or when running from VS in regular mode (Default when not using the Debug configuration)
 FROM base AS final
-COPY --from=otel_installer /otel-dotnet-auto /otel-dotnet-auto
+ARG OTEL_INSTALL_DIR
+COPY --from=otel_installer ${OTEL_INSTALL_DIR} ${OTEL_INSTALL_DIR}
 COPY --from=publish /app/publish /app/
-ENTRYPOINT ["/bin/bash", "-c", "source /otel-dotnet-auto/instrument.sh && exec dotnet WebApi.dll"]
+ENTRYPOINT ["/bin/bash", "-c", "source ${OTEL_DOTNET_AUTO_HOME}/instrument.sh && exec dotnet WebApi.dll"]
