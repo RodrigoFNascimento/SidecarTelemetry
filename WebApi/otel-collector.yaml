@@ -5,8 +5,10 @@ receivers:
         endpoint: 0.0.0.0:4317
 
 exporters:
-  logging:
-    loglevel: debug
+  otlp:
+    endpoint: host.docker.internal:4317
+    tls:
+      insecure: true
 
 processors:
   batch: {}
@@ -18,8 +20,8 @@ service:
     traces:
       receivers: [otlp]
       processors: [batch]
-      exporters: [logging]
+      exporters: [otlp]
     metrics:
       receivers: [otlp]
       processors: [batch]
-      exporters: [logging]
+      exporters: [otlp]
