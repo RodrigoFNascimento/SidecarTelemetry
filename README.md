@@ -1,5 +1,3 @@
-# SidecarTelemetry
-
 # OpenTelemetry Collector Sidecar Pattern
 
 This repository focuses on deploying the OpenTelemetry Collector using the **Sidecar Pattern**, a fundamental strategy for achieving highly reliable and low-latency observability pipelines in microservices architectures.
@@ -13,7 +11,7 @@ The Sidecar pattern is a deployment model where an **OpenTelemetry Collector** i
 In this setup, the Collector operates in **Agent mode**.
 
 | Component | Description |
-| :--- | :--- |
+| --- | --- |
 | **Application Container** | Runs the business logic (e.g., a .NET service). It is instrumented and sends raw telemetry data to the Collector via a loopback address. |
 | **Sidecar Collector** | Runs the OpenTelemetry Collector binary. It is configured to receive data from the adjacent application container via `localhost` using the OpenTelemetry Protocol (OTLP). |
 
@@ -41,7 +39,7 @@ Running the Collector as a sidecar offers significant advantages right at the so
 For large-scale production environments, the Sidecar Collector (Agent) is best paired with a centralized **Gateway Collector** deployment. This creates a resilient, two-tiered architecture.
 
 | Deployment Layer | Sidecar Collector (Agent Mode) | Gateway Collector (Central Mode) |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | **Location** | Co-located with the Application (in the same Pod/Task). | Centralized Cluster (separate Deployment/Service). |
 | **Primary Role** | Local ingestion, batching, buffering, and resource enrichment. | Load balancing, global sampling, filtering, security, and export to backends. |
 | **Owner** | Typically owned by the **Development Team** (per-service configuration). | Typically owned by the **Platform/SRE Team** (global governance). |
@@ -139,7 +137,7 @@ The Gateway Collector is the central point for **global policy, transformation, 
 The Sidecar Collector is the **local agent** responsible for the lowest-latency path and basic preparation.
 
 | Component | Purpose in Sidecar Collector |
-| --- | --- | --- |
+| --- | --- |
 | **`receivers`** | **OTLP** is configured on port `4317` to accept raw, frequent data **from the local WebAPI container** (via `localhost`). |
 | **`processors`** | Handles reliable transport by enabling a **persistent queue** and adding instance-specific metadata. |
 | **`exporters`** | Configured to send all processed data **only to the Gateway Collector**, treating the Gateway as the "final" destination. |
