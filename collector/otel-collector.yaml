@@ -7,8 +7,7 @@ receivers:
         endpoint: 0.0.0.0:4317
 
 exporters:
-  logging:
-    loglevel: debug
+  debug:
 
 extensions:
   health_check:
@@ -25,8 +24,8 @@ service:
     traces:
       receivers: [otlp]
       processors: [batch, resourcedetection]
-      exporters: [logging]
+      exporters: [debug]
     metrics:
       receivers: [otlp]
       processors: [batch]
-      exporters: [logging]
+      exporters: [debug]
